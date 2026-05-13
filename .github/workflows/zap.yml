@@ -53,5 +53,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ZAP-Security-Report
+          name: zapreport
           path: report_html.html
