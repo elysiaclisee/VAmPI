@@ -29,12 +29,12 @@ jobs:
 
       - name: dependancies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip==24.0 --only-binary :all:
+          pip install --only-binary :all: -r requirements.txt
 
       - name: SAST-semgrep
         run: |
-          pip install semgrep
+          pip install semgrep==1.136.0 --only-binary :all:
           semgrep scan --config "p/default" --error --sarif --output semgrep.sarif
 
       - name: semgrep-sarif
@@ -53,7 +53,7 @@ jobs:
 
       - name: SCA
         run: |
-          pip install pip-audit
+          pip install pip-audit==2.9.0 --only-binary :all:
           pip-audit -r requirements.txt
 
       - name: VAmPI-backstart
