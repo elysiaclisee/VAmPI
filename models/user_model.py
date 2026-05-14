@@ -7,6 +7,8 @@ from models.books_model import Book
 from random import randrange
 from sqlalchemy.sql import text
 
+#Define a constant instead of duplicating literal
+JWT_ALGORITHM = 'HS256'
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -29,15 +31,17 @@ class User(db.Model):
 
     def encode_auth_token(self, user_id):
         try:
+            #Don't use `datetime.datetime.utcnow` to create this datetime object
+            now = datetime.datetime.now(datetime.timezone.utc)
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=alive),
-                'iat': datetime.datetime.utcnow(),
+                'exp': now + datetime.timedelta(days=0, seconds=alive),
+                'iat': now,
                 'sub': user_id
             }
             return jwt.encode(
                 payload,
                 vuln_app.app.config.get('SECRET_KEY'),
-                algorithm='HS256'
+                algorithm=JWT_ALGORITHM
             )
         except Exception as e:
             return e
@@ -45,7 +49,11 @@ class User(db.Model):
     @staticmethod
     def decode_auth_token(auth_token):
         try:
-            payload = jwt.decode(auth_token, vuln_app.app.config.get('SECRET_KEY'), algorithms=["HS256"])
+            payload = jwt.decode(
+                auth_token, 
+                vuln_app.app.config.get('SECRET_KEY'), 
+                algorithms=[JWT_ALGORITHM]
+            )
             return payload
         except jwt.ExpiredSignatureError:
             return {'error': 'Signature expired. Please log in again.'}
