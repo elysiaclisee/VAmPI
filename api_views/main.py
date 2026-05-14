@@ -1,6 +1,6 @@
 from flask import Response
 
-from models.user_model import *
+from models.user_model import db, User
 from app import vuln
 
 def populate_db():
