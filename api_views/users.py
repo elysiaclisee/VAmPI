@@ -1,6 +1,7 @@
 import re
 import jsonschema
 import jwt
+
 from config import db, vuln_app
 #Import only needed names or import the module and then use its members.
 from api_views.json_schemas import register_user_schema, login_user_schema, update_email_schema
@@ -17,9 +18,11 @@ def error_message_helper(msg):
     else:
         return '{ "status": "fail", "message": "' + msg + '"}'
 
+
 def get_all_users():
     return_value = jsonify({'users': User.get_all_users()})
     return return_value
+
 
 def debug():
     return_value = jsonify({'users': User.get_all_users_debug()})
@@ -41,19 +44,23 @@ def me():
         }
         return Response(json.dumps(responseObject), 200, mimetype=JSON_MIME)
         
+
 def get_by_username(username):
     if User.get_user(username):
         return Response(str(User.get_user(username)), 200, mimetype=JSON_MIME)
     else:
         return Response(error_message_helper("User not found"), 404, mimetype=JSON_MIME)
 
+
 def register_user():
     request_data = request.get_json()
+    # check if user already exists
     user = User.query.filter_by(username=request_data.get('username')).first()
     if not user:
         try:
+            # validate the data are in the correct form
             jsonschema.validate(request_data, register_user_schema)
-            if vuln and 'admin' in request_data:
+            if vuln and 'admin' in request_data:  # User is possible to define if she/he wants to be an admin !!
                 if request_data['admin']:
                     admin = True
                 else:
@@ -77,11 +84,14 @@ def register_user():
     else:
         return Response(error_message_helper("User already exists. Please Log in."), 200, mimetype=JSON_MIME)
 
+
 def login_user():
     request_data = request.get_json()
 
     try:
+        # validate the data are in the correct form
         jsonschema.validate(request_data, login_user_schema)
+        # fetching user data if the user exists
         user = User.query.filter_by(username=request_data.get('username')).first()
         if user and request_data.get('password') == user.password:
             auth_token = user.encode_auth_token(user.username)
@@ -91,21 +101,22 @@ def login_user():
                 'auth_token': auth_token
             }
             return Response(json.dumps(responseObject), 200, mimetype=JSON_MIME)
-        if vuln:
+        if vuln:  # Password Enumeration
             if user and request_data.get('password') != user.password:
                 return Response(error_message_helper("Password is not correct for the given username."), 200,
                                 mimetype=JSON_MIME)
-            elif not user:
+            elif not user:  # User enumeration
                 return Response(error_message_helper("Username does not exist"), 200, mimetype=JSON_MIME)
         else:
             if (user and request_data.get('password') != user.password) or (not user):
                 return Response(error_message_helper("Username or Password Incorrect!"), 200,
                                 mimetype=JSON_MIME)
-    #Specify an exception class to catch or reraise the exception
     except jsonschema.exceptions.ValidationError as exc:
         return Response(error_message_helper(exc.message), 400, mimetype=JSON_MIME)
+    #Specify an exception class to catch or reraise the exception
     except Exception:
         return Response(error_message_helper("An error occurred!"), 200, mimetype=JSON_MIME)
+
 
 def token_validator(auth_header):
     if auth_header:
@@ -117,9 +128,11 @@ def token_validator(auth_header):
     else:
         auth_token = ""
     if auth_token:
+        # if auth_token is valid we get back the username of the user
         return User.decode_auth_token(auth_token)
     else:
         return {'error': 'Invalid token. Please log in again.'}
+
 
 def update_email(username):
     request_data = request.get_json()
@@ -127,13 +140,13 @@ def update_email(username):
         jsonschema.validate(request_data, update_email_schema)
     #Specify an exception class to catch or reraise the exception
     except jsonschema.exceptions.ValidationError:
-        return Response(error_message_helper("Provide a proper JSON body."), 400, mimetype=JSON_MIME)
+        return Response(error_message_helper("Please provide a proper JSON body."), 400, mimetype=JSON_MIME)
     resp = token_validator(request.headers.get('Authorization'))
     if "error" in resp:
         return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
     else:
         user = User.query.filter_by(username=resp['sub']).first()
-        if vuln:
+        if vuln:  # Regex DoS
             match = re.search(
                 r"^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@{1}([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$",
                 str(request_data.get('email')))
@@ -168,6 +181,7 @@ def update_email(username):
                 return Response(error_message_helper("Please Provide a valid email address."), 400,
                                 mimetype=JSON_MIME)
 
+
 def update_password(username):
     request_data = request.get_json()
     resp = token_validator(request.headers.get('Authorization'))
@@ -175,7 +189,7 @@ def update_password(username):
         return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
     else:
         if request_data.get('password'):
-            if vuln:
+            if vuln:  # Unauthorized update of password of another user
                 user = User.query.filter_by(username=username).first()
                 if user:
                     user.password = request_data.get('password')
@@ -193,6 +207,7 @@ def update_password(username):
             return Response(json.dumps(responseObject), 204, mimetype=JSON_MIME)
         else:
             return Response(error_message_helper("Malformed Data"), 400, mimetype=JSON_MIME)
+
 
 def delete_user(username):
     resp = token_validator(request.headers.get('Authorization'))
