@@ -33,7 +33,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: SAST-semgrep
-        uses: returntocorp/semgrep-action@v1
+        uses: semgrep/action@v1
         with:
           config: "p/default"
           generateSarif: "1"
