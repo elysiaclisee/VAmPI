@@ -36,13 +36,10 @@ jobs:
         run: |
           pip install semgrep
           semgrep scan --config "p/default" --error --sarif --output semgrep.sarif
-          
-      - if: always() 
-        run: cat semgrep.sarif
-        
+
       - name: semgrep-sarif
         uses: github/codeql-action/upload-sarif@v3
-        if: always() #always save report
+        if: always() 
         with:
           sarif_file: semgrep.sarif
 
