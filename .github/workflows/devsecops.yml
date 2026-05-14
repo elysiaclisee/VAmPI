@@ -1,0 +1,94 @@
+name: Master DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công trên web
+
+jobs:
+  security-pipeline:
+    name: VAmPI Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Bắt buộc cho báo cáo Semgrep
+      issues: write          # Bắt buộc cho báo cáo ZAP
+      actions: write
+      pull-requests: read    # Bắt buộc cho SonarCloud
+
+    steps:
+      # ==========================================
+      # 1. CODE COMMIT: Tải mã nguồn về máy ảo
+      # ==========================================
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Bắt buộc phải có để SonarCloud nhận diện cấu trúc code
+
+      # ==========================================
+      # 2. BUILD: Cài đặt Dependencies cho VAmPI
+      # ==========================================
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9' 
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ==========================================
+      # 3. SAST: Quét Semgrep & SonarCloud
+      # ==========================================
+      - name: SAST - Semgrep Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/default"
+          generateSarif: "1"
+
+      - name: Upload Semgrep SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() # Luôn lưu báo cáo lỗi dù Semgrep có đánh Fail
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: SAST - Analyze with SonarCloud
+        uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: -Dsonar.projectKey=elysiaclisee_VAmPI -Dsonar.organization=elysiaclisee -Dsonar.sources=.
+          projectBaseDir: .
+
+      # ==========================================
+      # 4. SCA: Kiểm tra lỗ hổng thư viện 
+      # ==========================================
+      - name: SCA - Python Dependencies Scan (Quality Gate)
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      # ==========================================
+      # 5. DAST: Khởi động App và quét ZAP
+      # ==========================================
+      - name: Start VAmPI in Background
+        run: |
+          python app.py &
+          sleep 15 # Chờ 15 giây để Flask mở cổng 5000
+
+      - name: DAST - OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'http://localhost:5000' 
+          fail_action: true # Quality Gate: Báo Fail chặn deploy nếu có lỗi
+          artifact_name: zap-scan
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        if: always() # Luôn lưu file HTML báo cáo dù pipeline bị Fail
+        with:
+          name: zapreport
+          path: report_html.html
