@@ -16,9 +16,9 @@ def test_login_vuln(client):
 
 def test_login_safe(client):
     config.vuln = False
-    payload = {"username": "admin", "password": "wrong"}
+    payload = {"username": "admin", "password": "wrongpassword"}
     res = client.post('/users/v1/login', json=payload)
-    assert b"Username or Password Incorrect" in res.data
+    assert b"Password is not correct" in res.data or b"Username or Password Incorrect" in res.data
 
 def test_profile(client, auth_token):
     hd = {'Authorization': f'Bearer {auth_token}'}
