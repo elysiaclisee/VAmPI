@@ -16,7 +16,19 @@ def app():
         db.session.remove()
         db.drop_all()
         db.create_all()
-        User.init_db_users() 
+        User.init_db_users()
+        
         yield flask_app
+        
         db.session.remove()
         db.drop_all()
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
+
+@pytest.fixture
+def auth_token(client):
+    payload = {"username": "admin", "password": "pass1"}
+    response = client.post('/users/v1/login', json=payload)
+    return response.get_json()['auth_token']
