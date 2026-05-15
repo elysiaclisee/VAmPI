@@ -1,3 +1,4 @@
+import config
 import pytest
 import app as vampi_app
 from api_views.users import JSON_MIME
@@ -15,10 +16,10 @@ def test_wrong_pwd(client):
     assert b"Password is not correct" in response.data
 
 def test_wrong_pwd_secure(client):
-    vampi_app.vuln = False #cover line 107
+    config.vuln = False
     payload = {"username": "admin", "password": "wrongpassword"}
-    response = client.post('/users/v1/login', json=payload)
-    assert b"Username or Password Incorrect" in response.data
+    res = client.post('/users/v1/login', json=payload)
+    assert b"Username or Password Incorrect" in res.data
 
 def test_get_me_profile(client, auth_token):
     headers = {'Authorization': f'Bearer {auth_token}'}
