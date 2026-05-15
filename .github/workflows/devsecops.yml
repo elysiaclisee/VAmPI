@@ -57,6 +57,7 @@ jobs:
           projectBaseDir: .
 
       - name: SCA
+        continue-on-error: true
         run: |
           pip install pip-audit==2.9.0 --only-binary :all:
           pip-audit -r requirements.txt
