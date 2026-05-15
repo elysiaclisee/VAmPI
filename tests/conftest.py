@@ -12,13 +12,15 @@ def app():
         "SQLALCHEMY_TRACK_MODIFICATIONS": False
     })
 
-with flask_app.app_context():
-        db.session.close() 
-        db.drop_all() 
+    with flask_app.app_context():
+        db.session.close()
+        db.drop_all()
         db.create_all()
         User.init_db_users()
+        
         yield flask_app
-        db.session.close() 
+        
+        db.session.close()
         db.drop_all()
 
 @pytest.fixture
