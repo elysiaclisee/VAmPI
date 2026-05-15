@@ -46,7 +46,7 @@ jobs:
           
       - name: unittest
         run: |
-          pytest --cov=. --cov-report=xml:coverage.xml tests/
+          python -m pytest --cov=. --cov-report=xml:coverage.xml tests/
           
       - name: SAST-sonarcloud
         uses: SonarSource/sonarcloud-github-action@master
