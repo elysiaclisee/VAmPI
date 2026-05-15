@@ -1,5 +1,6 @@
 from config import vuln_app, vuln, alive
 import os
+from flask import jsonify
 
 '''
  Decide if you want to server a vulnerable version or not!
@@ -7,19 +8,34 @@ import os
           as it is a matter of bad practice. Such an example is the debug endpoint.
 '''
 app = vuln_app.app
- 
+
 @app.after_request
 def add_security_headers(response):
     #error 10021: X-Content-Type-Options Header Missing
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    #error 10036: Server Leaks Version Information (Ghi đè Header Server)
+    #error 10036: Server Leaks Version Information 
     response.headers['Server'] = 'Web-Server'  
-    #error 10049: Storable and Cacheable Content (Tắt cache cho API)
+    #error 10049: Storable and Cacheable Content 
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     response.headers['Pragma'] = 'no-cache'
     #error 90004: Cross-Origin-Resource-Policy Header Missing
     response.headers['Cross-Origin-Resource-Policy'] = 'same-origin' 
     return response
 
+@app.errorhandler(404)
+def not_found_error(error):
+    response = jsonify({"message": "Resource not found"})
+    response.status_code = 404
+    return add_security_headers(response)
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    #error 90022: Application Error Disclosure
+    response = jsonify({"message": "Internal Server Error"})
+    response.status_code = 500
+    return add_security_headers(response)
+
 if __name__ == '__main__':
-    vuln_app.run(host='0.0.0.0', port=5000, debug=True)
+    #turn off debug mode to prevent Modern Web Application (10109)
+    debug_option = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    vuln_app.run(host='0.0.0.0', port=5000, debug=debug_option)
