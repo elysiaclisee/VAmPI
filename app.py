@@ -8,9 +8,6 @@ import os
 '''
 app = vuln_app.app
 
-if __name__ == '__main__':
-    vuln_app.run(host='0.0.0.0', port=5000, debug=True)
-
 @app.after_request
 def add_security_headers(response):
     #error 10021: X-Content-Type-Options Header Missing
@@ -23,3 +20,6 @@ def add_security_headers(response):
     #error 90004: Cross-Origin-Resource-Policy Header Missing
     response.headers['Cross-Origin-Resource-Policy'] = 'same-origin' 
     return response
+
+if __name__ == '__main__':
+    vuln_app.run(host='0.0.0.0', port=5000, debug=True)
