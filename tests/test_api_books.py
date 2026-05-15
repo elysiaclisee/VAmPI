@@ -8,7 +8,7 @@ def test_get_all(client, auth_token):
 
 def test_add_ok(client, auth_token):
     hd = {'Authorization': f'Bearer {auth_token}'}
-    payload = {"book_title": "Unique_Title_Test", "secret": "No_Comment"}
+    payload = {"book_title": "Unique_DevSecOps", "secret": "Clean_Code"}
     res = client.post('/books/v1', json=payload, headers=hd)
     assert res.status_code == 200
 
