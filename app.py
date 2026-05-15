@@ -8,6 +8,12 @@ import os
 '''
 app = vuln_app.app
 
+@app.errorhandler(404)
+def not_found_error(error):
+    response = jsonify({"error": "Not Found"})
+    response.status_code = 404
+    return add_security_headers(response)
+ 
 @app.after_request
 def add_security_headers(response):
     #error 10021: X-Content-Type-Options Header Missing
