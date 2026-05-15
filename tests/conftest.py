@@ -1,4 +1,5 @@
 import pytest
+import config
 from app import app as flask_app
 from config import db
 from models.user_model import User
