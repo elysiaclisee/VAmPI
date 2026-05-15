@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip==24.0 --only-binary :all:
           pip install --only-binary :all: -r requirements.txt
+          pip install pytest==8.1.1 pytest-cov==4.1.0
 
       - name: SAST-semgrep
         run: |
@@ -42,7 +43,11 @@ jobs:
         if: always() 
         with:
           sarif_file: semgrep.sarif
-
+          
+      - name: unittest
+        run: |
+          pytest --cov=. --cov-report=xml:coverage.xml tests/
+          
       - name: SAST-sonarcloud
         uses: SonarSource/sonarcloud-github-action@master
         env:
