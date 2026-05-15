@@ -2,8 +2,9 @@ import pytest
 import app as vampi_app
 from api_views.books import JSON_MIME
 
-def test_get_all_books(client):
-    response = client.get('/books/v1/all')
+def test_get_all_books(client, auth_token):
+    headers = {'Authorization': f'Bearer {auth_token}'}
+    response = client.get('/books/v1/all', headers=headers)
     assert response.status_code == 200
     assert 'Books' in response.get_json()
 
