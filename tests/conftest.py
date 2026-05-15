@@ -13,6 +13,8 @@ def app():
     })
 
     with flask_app.app_context():
+        db.session.remove()
+        db.drop_all()
         db.create_all()
         User.init_db_users()
         yield flask_app
@@ -25,7 +27,6 @@ def client(app):
 
 @pytest.fixture
 def auth_token(client):
-    # Lấy token của admin để test các hàm yêu cầu xác thực
     payload = {"username": "admin", "password": "pass1"}
     response = client.post('/users/v1/login', json=payload)
     return response.get_json()['auth_token']
