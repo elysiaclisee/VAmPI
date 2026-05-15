@@ -27,10 +27,9 @@ def not_found_error(error):
     response = jsonify({"message": "Resource not found"})
     response.status_code = 404
     return add_security_headers(response)
-
-@app.errorhandler(Exception)
-def handle_exception(e):
-    #error 90022: Application Error Disclosure
+ 
+@app.errorhandler(500)
+def handle_500(e):
     response = jsonify({"message": "Internal Server Error"})
     response.status_code = 500
     return add_security_headers(response)
