@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: 8598cbae-543a-49a5-8123-4485367feec9
+
+localResources:
+  collections:
+    - ..\openapi_specs\VAmPI.postman_collection.json
+  specs:
+    - ..\openapi_specs\openapi3.yml
