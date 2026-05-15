@@ -4,6 +4,9 @@ from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from connexion.exceptions import ProblemException
 
+vuln = True  
+alive = True
+
 vuln_app = connexion.App(__name__, specification_dir='./openapi_specs')
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(vuln_app.app.root_path, 'database/database.db')
