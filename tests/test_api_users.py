@@ -1,6 +1,6 @@
 import pytest
 import app as vampi_app
-from users import JSON_MIME
+from api_views.users import JSON_MIME
 
 def test_duplicate_user(client):
     payload = {"username": "admin", "password": "any", "email": "any@mail.com"}
