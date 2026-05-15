@@ -1,4 +1,2 @@
-10036	IGNORE	http://localhost:5000/robots.txt
-10036	IGNORE	http://localhost:5000/sitemap.xml
-10049	IGNORE	http://localhost:5000/robots.txt
-10049	IGNORE	http://localhost:5000/sitemap.xml
+10036  IGNORE
+10049  IGNORE
