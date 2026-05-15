@@ -22,7 +22,7 @@ def test_wrong_pwd_secure(client):
 
 def test_get_me_profile(client, auth_token):
     headers = {'Authorization': f'Bearer {auth_token}'}
-    response = client.get('/users/v1/me', headers=headers)
+    response = client.get('/users/v1/_me', headers=headers)
     assert response.status_code == 200
     assert response.get_json()['data']['username'] == 'admin'
 
@@ -31,5 +31,5 @@ def test_update_pwd_bola(client, auth_token):
     headers = {'Authorization': f'Bearer {auth_token}'}
     #attempt to change the pwd of name1 through username parameter on URL
     payload = {"password": "newpassword123"}
-    response = client.put('/users/v1/update/password/name1', json=payload, headers=headers)
+    response = client.put('/users/v1/password/name1', json=payload, headers=headers)
     assert response.status_code == 204
