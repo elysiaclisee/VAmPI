@@ -6,7 +6,7 @@ from api_views.json_schemas import add_book_schema
 from flask import jsonify, Response, request, json
 from models.user_model import User
 from models.books_model import Book
-from app import vuln
+from config import vuln
 
 #Define a constant instead of duplicating this literal "application/json" 9 times
 JSON_MIME = "application/json"
