@@ -12,7 +12,22 @@ from config import vuln
 JSON_MIME = "application/json"
 
 def get_all_books():
-    return jsonify({'Books': Book.get_all_books()})
+    resp = token_validator(request.headers.get('Authorization'))
+    if "error" in resp:
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+    
+    user = User.query.filter_by(username=resp['sub']).first()
+    books = Book.query.filter_by(user=user).all()
+    
+    book_list = []
+    for book in books:
+        book_list.append({
+            'book_title': book.book_title,
+            'secret': book.secret_content,
+            'owner': user.username
+        })
+        
+    return Response(json.dumps({'Books': book_list}), 200, mimetype=JSON_MIME)
 
 def add_new_book():
     request_data = request.get_json()

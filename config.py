@@ -13,7 +13,10 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(vuln_app.app.root_path, 'd
 vuln_app.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 vuln_app.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-vuln_app.app.config['SECRET_KEY'] = os.environ.get('MY_APP_SECRET_KEY', 'default-devkey')
+vuln_app.app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
+if not vuln_app.app.config['SECRET_KEY']:
+    raise ValueError("No FLASK_SECRET_KEY set for Flask application. Cryptographic operations cannot proceed securely.")
+
 # start the db
 db = SQLAlchemy(vuln_app.app)
 
