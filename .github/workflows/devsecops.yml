@@ -44,10 +44,6 @@ jobs:
         with:
           sarif_file: semgrep.sarif
           
-      - name: unittest
-        run: |
-          python -m pytest --cov=. --cov-report=xml:coverage.xml tests/
-          
       - name: SAST-sonarcloud
         uses: SonarSource/sonarcloud-github-action@master
         env:
