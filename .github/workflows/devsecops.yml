@@ -59,9 +59,11 @@ jobs:
           pip-audit -r requirements.txt
 
       - name: VAmPI-backstart
+        env:
+          FLASK_SECRET_KEY: "ci-cd-test-key-12345" #prevent ValueError
         run: |
           python app.py &
-          sleep 15 
+          sleep 15
 
       - name: DAST-zap
         uses: zaproxy/action-baseline@v0.14.0
