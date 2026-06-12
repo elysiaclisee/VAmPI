@@ -20,11 +20,45 @@ def error_message_helper(msg):
 
 
 def get_all_users():
-    return_value = jsonify({'users': User.get_all_users()})
-    return return_value
+    resp = token_validator(request.headers.get('Authorization'))
+    
+    if isinstance(resp, str): 
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+    if "error" in resp:
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
 
+    current_username = resp['sub']
+    user_record = User.query.filter_by(username=current_username).first()
+
+    # RBAC
+    if not user_record or not user_record.admin:
+        return Response(error_message_helper("Unauthorized! Admin access required to view all users."), 403, mimetype=JSON_MIME)
+
+    list_of_users = []
+    users = User.query.all()
+    for user in users:
+        user_data = {}
+        user_data['username'] = user.username
+        user_data['email'] = user.email
+        user_data['admin'] = user.admin
+        list_of_users.append(user_data)
+
+    return Response(json.dumps({"status": "success", "users": list_of_users}), 200, mimetype=JSON_MIME)
 
 def debug():
+    resp = token_validator(request.headers.get('Authorization'))
+    
+    if isinstance(resp, str): 
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+    if "error" in resp:
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+
+    current_username = resp['sub']
+    req_user = User.query.filter_by(username=current_username).first()
+    
+    if not req_user or not req_user.admin:
+        return Response(error_message_helper("Unauthorized! Top secret debug info is for Admins only."), 403, mimetype=JSON_MIME)
+
     return_value = jsonify({'users': User.get_all_users_debug()})
     return return_value
 
@@ -46,12 +80,22 @@ def me():
         
 
 def get_by_username(username):
+    resp = token_validator(request.headers.get('Authorization'))
+    if "error" in resp:
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+
+    current_user = resp['sub']
+    user_record = User.query.filter_by(username=current_user).first()
+    is_admin = user_record.admin if user_record else False
+
+    if current_user != username and not is_admin:
+        return Response(error_message_helper("Unauthorized! You cannot view other users' data."), 403, mimetype=JSON_MIME)
+
     if User.get_user(username):
         return Response(str(User.get_user(username)), 200, mimetype=JSON_MIME)
     else:
         return Response(error_message_helper("User not found"), 404, mimetype=JSON_MIME)
-
-
+    
 def register_user():
     request_data = request.get_json()
     user = User.query.filter_by(username=request_data.get('username')).first()
