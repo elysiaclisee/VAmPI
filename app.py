@@ -13,11 +13,6 @@ app = vuln_app.app
 def add_security_headers(response):
     #error 10021: X-Content-Type-Options Header Missing
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    #error 10036: Server Leaks Version Information 
-    response.headers['Server'] = 'Web-Server'  
-    #error 10049: Storable and Cacheable Content 
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
     #error 90004: Cross-Origin-Resource-Policy Header Missing
     response.headers['Cross-Origin-Resource-Policy'] = 'same-origin' 
     return response
