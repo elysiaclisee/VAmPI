@@ -31,17 +31,15 @@ class User(db.Model):
 
     def encode_auth_token(self, user_id):
         try:
-            #Don't use `datetime.datetime.utcnow` to create this datetime object
-            now = datetime.datetime.now(datetime.timezone.utc)
             payload = {
-                'exp': now + datetime.timedelta(days=0, seconds=alive),
-                'iat': now,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=alive),
+                'iat': datetime.datetime.utcnow(),
                 'sub': user_id
             }
             return jwt.encode(
                 payload,
                 vuln_app.app.config.get('SECRET_KEY'),
-                algorithm=JWT_ALGORITHM
+                algorithm='HS256'
             )
         except Exception as e:
             return e
