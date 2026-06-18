@@ -31,15 +31,17 @@ class User(db.Model):
 
     def encode_auth_token(self, user_id):
         try:
+            #Don't use `datetime.datetime.utcnow` to create this datetime object
+            now = datetime.datetime.now(datetime.timezone.utc)
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=alive),
-                'iat': datetime.datetime.utcnow(),
+                'exp': now + datetime.timedelta(days=0, seconds=alive),
+                'iat': now,
                 'sub': user_id
             }
             return jwt.encode(
                 payload,
                 vuln_app.app.config.get('SECRET_KEY'),
-                algorithm='HS256'
+                algorithm=JWT_ALGORITHM
             )
         except Exception as e:
             return e
@@ -63,36 +65,3 @@ class User(db.Model):
 
     def json_debug(self):
         return {'username': self.username, 'password': self.password, 'email': self.email, 'admin': self.admin}
-
-    @staticmethod
-    def get_all_users():
-        return [User.json(user) for user in User.query.all()]
-
-    @staticmethod
-    def get_all_users_debug():
-        return [User.json_debug(user) for user in User.query.all()]
-
-    @staticmethod
-    def get_user(username):
-        fin_query = User.query.filter_by(username=username).first()
-        return fin_query
-
-    @staticmethod
-    def register_user(username, password, email, admin=False):
-        new_user = User(username=username, password=password, email=email, admin=admin)
-        randomint = str(randrange(100))
-        new_user.books = [Book(book_title="bookTitle" + randomint, secret_content="secret for bookTitle" + randomint)]
-        db.session.add(new_user)
-        db.session.commit()
-
-    @staticmethod
-    def delete_user(username):
-        done = User.query.filter_by(username=username).delete()
-        db.session.commit()
-        return done
-
-    @staticmethod
-    def init_db_users():
-        User.register_user("name1", "pass1", "mail1@mail.com", False)
-        User.register_user("name2", "pass2", "mail2@mail.com", False)
-        User.register_user("admin", "pass1", "admin@mail.com", True)
