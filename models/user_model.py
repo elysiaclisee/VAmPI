@@ -65,3 +65,48 @@ class User(db.Model):
 
     def json_debug(self):
         return {'username': self.username, 'password': self.password, 'email': self.email, 'admin': self.admin}
+    
+    @staticmethod
+    def get_all_users():
+        return [User.json(user) for user in User.query.all()]
+
+    @staticmethod
+    def get_all_users_debug():
+        return [User.json_debug(user) for user in User.query.all()]
+
+    @staticmethod
+    def get_user(username):
+        if vuln:  # SQLi Injection
+            user_query = f"SELECT * FROM users WHERE username = '{username}'"
+            query = db.session.execute(text(user_query))
+            ret = query.fetchone()
+            if ret:
+                fin_query = '{"username": "%s", "email": "%s"}' % (ret[1], ret[3])
+            else:
+                fin_query = None
+        else:
+            fin_query = User.query.filter_by(username=username).first()
+        return fin_query
+
+    @staticmethod
+    def register_user(username, password, email, admin=False):
+        new_user = User(username=username, password=password, email=email, admin=admin)
+        randomint = str(randrange(100))
+        new_user.books = [Book(book_title="bookTitle" + randomint, secret_content="secret for bookTitle" + randomint)]
+        db.session.add(new_user)
+        db.session.commit()
+
+    @staticmethod
+    def delete_user(username):
+        done = User.query.filter_by(username=username).delete()
+        db.session.commit()
+        return done
+    
+    @staticmethod
+    def init_db_users():
+        User.register_user("name1", "pass1", "mail1@mail.com", False)
+        User.register_user("name2", "pass2", "mail2@mail.com", False)
+        User.register_user("admin", "pass1", "admin@mail.com", True)
+        
+def decode_auth_token_wrapper(token):
+    return User.decode_auth_token(token)
