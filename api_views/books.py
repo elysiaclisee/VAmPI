@@ -1,12 +1,11 @@
 import jsonschema
 from api_views.users import token_validator, error_message_helper
-from config import db
+from config import db, vuln
 #Import only needed names or import the module and then use its members
 from api_views.json_schemas import add_book_schema
 from flask import jsonify, Response, request, json
 from models.user_model import User
 from models.books_model import Book
-from config import vuln
 
 #Define a constant instead of duplicating this literal "application/json" 9 times
 JSON_MIME = "application/json"

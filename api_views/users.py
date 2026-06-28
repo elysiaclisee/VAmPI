@@ -2,7 +2,7 @@ import re
 import jsonschema
 import jwt
 
-from config import db, vuln_app
+from config import db, vuln
 #Import only needed names or import the module and then use its members.
 from api_views.json_schemas import register_user_schema, login_user_schema, update_email_schema
 from flask import jsonify, Response, request, json
@@ -20,13 +20,21 @@ def error_message_helper(msg):
 
 
 def get_all_users():
+    resp = token_validator(request.headers.get('Authorization'))
+    if "error" in resp:
+        return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+
+    user = User.query.filter_by(username=resp['sub']).first()
+    if not user.admin:
+        return Response(error_message_helper("Unauthorized. Only admins can view the user directory."), 403, mimetype=JSON_MIME)
+
     return_value = jsonify({'users': User.get_all_users()})
     return return_value
 
 
 def debug():
-    return_value = jsonify({'users': User.get_all_users_debug()})
-    return return_value
+    return Response(error_message_helper("Resource not found"), 404, mimetype=JSON_MIME)
+
 
 def me():
     resp = token_validator(request.headers.get('Authorization'))
@@ -180,17 +188,23 @@ def update_password(username):
     
     if "error" in resp:
         return Response(error_message_helper(resp), 401, mimetype=JSON_MIME)
+
+    logged_in_username = resp['sub']
+    logged_in_user = User.query.filter_by(username=logged_in_username).first()
+    
+    if username != logged_in_username and not logged_in_user.admin:
+        return Response(error_message_helper("Unauthorized. You can only change your own password."), 403, mimetype=JSON_MIME)
         
     if request_data.get('password'):
-        user = User.query.filter_by(username=resp['sub']).first()
+        target_user = User.query.filter_by(username=username).first()
         
-        if user:
-            user.password = request_data.get('password')
+        if target_user:
+            target_user.password = request_data.get('password')
             db.session.commit()
             
             responseObject = {
                 'status': 'success',
-                'Password': 'Updated.'
+                'message': f'Password successfully updated for {username}.'
             }
             return Response(json.dumps(responseObject), 200, mimetype=JSON_MIME)
         else:

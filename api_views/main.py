@@ -1,7 +1,7 @@
 from flask import Response
 
 from models.user_model import db, User
-from app import vuln
+from config import vuln
 
 def populate_db():
     db.drop_all()
